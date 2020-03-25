@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using Vector3Int = UnityEngine.Vector3Int;
 using Random = System.Random;
 
+/// <summary>
+/// Uses binary & ternary space partitioning to subdivide a house/mansion into rooms and hallways.
+/// </summary>
 public class HouseGenerator
 {
-	const int MaxRoomArea = 80;
-	const int MinSplittableArea = 32;
-	const float MaxHallRate = 0.15f;
+	readonly int MaxRoomArea = 80;
+	readonly int MinSplittableArea = 32;
+	readonly float MaxHallRate = 0.15f;
 
 	Random rand;
 
@@ -15,16 +18,19 @@ public class HouseGenerator
 	int TotalHallArea = 0;
 	Queue<Rect> Chunks, Halls, Blocks, Rooms;
 
-	public HouseGenerator(int x, int y)
+	public HouseGenerator(int width, int height, int maxRoomArea = 80, int minSplittableArea = 32, float maxHallRate = 0.15f)
 	{
 		rand = new Random();
 		Rect.rand = rand;
-		House = new Rect(x, y);
+		House = new Rect(width, height);
 		Chunks = new Queue<Rect>();
 		Halls = new Queue<Rect>();
 		Blocks = new Queue<Rect>();
 		Rooms = new Queue<Rect>();
 		direction = CoinFlip();
+		this.MaxRoomArea = maxRoomArea;
+		this.MinSplittableArea = minSplittableArea;
+		this.MaxHallRate = maxHallRate;
 	}
 
 	public (Queue<Rect>, Queue<Rect>, Rect) Drawables()
@@ -56,6 +62,9 @@ public class HouseGenerator
 			// place windows;
 	}
 
+	/// <summary>
+	/// Divides the house into clusters of rooms and hallways.
+	/// </summary>
 	void ChunksToBlocks()
 	{
 		Chunks.Enqueue(House);
@@ -102,6 +111,11 @@ public class HouseGenerator
 		TotalHallArea += hall.Area;
 	}
 
+	/// <summary>
+	/// Shuffles a Queue
+	/// </summary>
+	/// <param name="Q">The Queue to be shuffled</param>
+
 	void Shuffle(Queue<Rect> Q)
 	{
 		List<Rect> l = new List<Rect>();
@@ -116,6 +130,10 @@ public class HouseGenerator
 			Q.Enqueue(r);
 	}
 
+	/// <summary>
+	/// Shuffles a List
+	/// </summary>
+	/// <param name="list">The List to be shuffled</param>
 	void Shuffle(List<Rect> list)
 	{
 		int n = list.Count;
@@ -129,6 +147,9 @@ public class HouseGenerator
 		}
 	}
 
+	/// <summary>
+	/// Divides clusters of rooms into individual rooms
+	/// </summary>
 	void BlocksToRooms()
 	{
 		while (Blocks.Count > 0)
@@ -159,11 +180,13 @@ public class HouseGenerator
 		Blocks = null;
 	}
 
-	bool CanHallSplit()
-	{
-		return false;
-	}
-
+	/// <summary>
+	/// Splits a chunk into two smaller chunks with a hall inbetween.
+	/// </summary>
+	/// <param name="chunk">Original chunk</param>
+	/// <param name="chunk_a">Left/Top subdivided chunk</param>
+	/// <param name="hall">Hall inbetween the chunks</param>
+	/// <param name="chunk_b">Right/Bottom subdivided chunk</param>
 	void HallChunkSplit(Rect chunk, out Rect chunk_a, out Rect hall, out Rect chunk_b)
 	{
 		if (chunk.CanSubdivideHorizontally_WithHall() && chunk.CanSubdivideVertically_WithHall())
@@ -197,6 +220,13 @@ public class HouseGenerator
 	{
 		return block.CanSubdivide() && (block.Area > MaxRoomArea || Roll(0.90d));
 	}
+
+	/// <summary>
+	/// Splits a block into two smaller blocks.
+	/// </summary>
+	/// <param name="block">Input block</param>
+	/// <param name="block_a">Left/Top output block</param>
+	/// <param name="block_b">Right/Bottom output block</param>
 	void RandomBlockSplit(Rect block, out Rect block_a, out Rect block_b)
 	{
 		// Rotate split direction
