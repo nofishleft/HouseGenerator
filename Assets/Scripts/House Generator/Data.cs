@@ -85,8 +85,18 @@ public class HouseGenerator
 		Rect hall;
 		Rect chunk_a, chunk_b;
 		HallChunkSplit(chunk, out chunk_a, out hall, out chunk_b);
-		Chunks.Enqueue(chunk_a);
-		Chunks.Enqueue(chunk_b);
+
+		if (CoinFlip())
+		{
+			Chunks.Enqueue(chunk_a);
+			Chunks.Enqueue(chunk_b);
+		}
+		else
+		{
+			Chunks.Enqueue(chunk_b);
+			Chunks.Enqueue(chunk_a);
+		}
+		
 		Halls.Enqueue(hall);
 		
 		TotalHallArea += hall.Area;
@@ -130,8 +140,17 @@ public class HouseGenerator
 			{
 				Rect block_a, block_b;
 				RandomBlockSplit(block, out block_a, out block_b);
-				Blocks.Enqueue(block_a);
-				Blocks.Enqueue(block_b);
+
+				if (CoinFlip())
+				{
+					Blocks.Enqueue(block_a);
+					Blocks.Enqueue(block_b);
+				}
+				else
+				{
+					Blocks.Enqueue(block_b);
+					Blocks.Enqueue(block_a);
+				}
 			}
 			else
 				Rooms.Enqueue(block);
@@ -180,12 +199,8 @@ public class HouseGenerator
 	}
 	void RandomBlockSplit(Rect block, out Rect block_a, out Rect block_b)
 	{
-		// 75% chance to rotate the split direction from the last time this method was called.
-
-		//if (Roll(0.75d))
-		//{
-			direction = !direction;
-		//}
+		// Rotate split direction
+		direction = !direction;
 
 		if (block.CanSubdivideHorizontally() && block.CanSubdivideVertically())
 			if (direction)
